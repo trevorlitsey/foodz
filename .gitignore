@@ -1,0 +1,10 @@
+# food data — never commit this
+data/
+*.json
+
+# os junk
+.DS_Store
+Thumbs.db
+
+# node (if ever added)
+node_modules/

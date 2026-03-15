@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>foodz 🍜</title>
+  <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
+  <meta http-equiv="Pragma" content="no-cache" />
+  <meta http-equiv="Expires" content="0" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700;1,9..40,400&display=swap" rel="stylesheet" />
+  <script>window._cbv = Date.now();</script>
+  <script>document.head.insertAdjacentHTML('beforeend','<link rel="stylesheet" href="style.css?v='+window._cbv+'">');</script>
+</head>
+<body>
+  <div id="app">
+    <header class="app-header">
+      <div class="header-inner">
+        <div class="logo">foodz <span class="logo-emoji">🍜</span></div>
+        <div class="date-nav">
+          <button id="btn-prev" class="nav-btn" aria-label="Previous day">←</button>
+          <button id="btn-date" class="date-display" id="date-display">—</button>
+          <button id="btn-next" class="nav-btn" aria-label="Next day">→</button>
+        </div>
+      </div>
+    </header>
+
+    <main class="main-content">
+      <!-- Loading state -->
+      <div id="loading" class="loading-state">
+        <div class="spinner"></div>
+        <p>loading your eats...</p>
+      </div>
+
+      <!-- No data state -->
+      <div id="no-data" class="empty-state" style="display:none">
+        <div class="empty-emoji">🤷</div>
+        <p>no data for this day</p>
+        <small>try another date</small>
+      </div>
+
+      <!-- Main day view -->
+      <div id="day-view" style="display:none">
+
+        <!-- Status banner -->
+        <div id="status-banner" class="status-banner"></div>
+
+        <!-- Summary cards row -->
+        <div class="summary-row">
+          <div class="summary-card" id="card-calories">
+            <div class="summary-label">calories in</div>
+            <div class="summary-value" id="val-calories-in">—</div>
+            <div class="summary-sub" id="val-goal">goal: —</div>
+          </div>
+          <div class="summary-card" id="card-burned">
+            <div class="summary-label">burned</div>
+            <div class="summary-value" id="val-burned">—</div>
+            <div class="summary-sub" id="val-net">net: —</div>
+          </div>
+          <div class="summary-card">
+            <div class="summary-label">protein</div>
+            <div class="summary-value" id="val-protein">—</div>
+            <div class="summary-sub">grams</div>
+          </div>
+        </div>
+
+        <!-- Macro bars -->
+        <div class="card macro-card">
+          <div class="card-title">macros</div>
+          <div class="macros-grid" id="macros-grid"></div>
+        </div>
+
+        <!-- Calorie progress bar -->
+        <div class="card progress-card">
+          <div class="progress-header">
+            <span class="card-title">calorie progress</span>
+            <span id="progress-label" class="progress-label-right"></span>
+          </div>
+          <div class="progress-track">
+            <div id="progress-bar" class="progress-bar"></div>
+          </div>
+        </div>
+
+        <!-- Week overview -->
+        <div class="card week-card">
+          <div class="card-title">past 7 days</div>
+          <div id="week-chart" class="week-chart"></div>
+          <div class="week-legend">
+            <span class="legend-dot dot-in"></span> calories in
+            <span class="legend-dot dot-net" style="margin-left:12px"></span> net
+            <span style="margin-left:12px;color:var(--text-3);font-size:0.72rem;">- - goal</span>
+          </div>
+          <div id="week-summary" class="week-summary" style="display:none"></div>
+        </div>
+
+        <!-- Exercise -->
+        <div id="exercise-section" class="card exercise-card" style="display:none">
+          <div class="card-title">exercise 💪</div>
+          <div id="exercise-list"></div>
+        </div>
+
+        <!-- Meals -->
+        <div id="meals-section">
+          <div class="section-title">meals</div>
+          <div id="meals-list"></div>
+        </div>
+
+      </div>
+    </main>
+  </div>
+
+  <script>var s=document.createElement('script');s.src='app.js?v='+window._cbv;document.body.appendChild(s);</script>
+</body>
+</html>
