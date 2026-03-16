@@ -119,15 +119,19 @@ async function renderWeekChart(currentDate) {
   const goalFrac = BASE_GOAL / maxCal;
   const goalLineTop = Math.round(100 - LABEL_H - GAP - goalFrac * BAR_AREA);
 
-  // Weekly totals
+  // Weekly totals — exclude today and days likely missing logs (< 800 cal)
+  const todayDateStr = todayStr();
+  const MIN_CAL_THRESHOLD = 800; // below this = probably an incomplete log day
   let weekCalIn = 0, weekBurned = 0, weekGoal = 0, daysWithData = 0;
-  entries.forEach(e => {
-    if (e) {
-      weekCalIn += e.totals.calories_in || 0;
-      weekBurned += e.totals.calories_burned || 0;
-      weekGoal += e.goal_calories || BASE_GOAL;
-      daysWithData++;
-    }
+  rangeDates.forEach((d, i) => {
+    const e = entries[i];
+    if (!e) return;
+    if (d === todayDateStr) return; // exclude today
+    if ((e.totals.calories_in || 0) < MIN_CAL_THRESHOLD) return; // likely missed logging
+    weekCalIn += e.totals.calories_in || 0;
+    weekBurned += e.totals.calories_burned || 0;
+    weekGoal += e.goal_calories || BASE_GOAL;
+    daysWithData++;
   });
 
   let html = '';
@@ -168,7 +172,7 @@ async function renderWeekChart(currentDate) {
       summaryEl.style.display = '';
       summaryEl.innerHTML = `
         <div class="week-summary-row">
-          <span class="week-summary-label">7 days</span>
+          <span class="week-summary-label">${daysWithData} day${daysWithData !== 1 ? 's' : ''}</span>
           <span class="week-summary-stats">${weekCalIn.toLocaleString()} in · ${weekBurned.toLocaleString()} burned · goal ${weekGoal.toLocaleString()}</span>
           <span class="week-summary-diff ${diffClass}">${diffLabel}</span>
         </div>
