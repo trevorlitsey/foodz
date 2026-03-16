@@ -43,16 +43,17 @@ cd ~/code/foodz-app && ./deploy.sh
 - **format:** `data/YYYY-MM-DD.json` + `data/index.json`
 
 ### how data gets to s3
-when i log food in the #foodz slack channel, i:
-1. write to `/home/trevorlitsey/.openclaw/workspace/food-journal/YYYY-MM-DD.json`
-2. regenerate `food-journal/index.json`
-3. sync those files to s3:
+when trevor logs food in the #foodz slack channel, the agent **automatically**:
+1. writes/updates `/home/trevorlitsey/.openclaw/workspace/food-journal/YYYY-MM-DD.json`
+2. regenerates `food-journal/index.json`
+3. immediately pushes both to s3 with `--cache-control "no-cache"` to prevent stale data
+
+helper script on the pi:
 ```bash
-aws s3 sync /home/trevorlitsey/.openclaw/workspace/food-journal/ \
-  s3://foodz-trevor-fail/data/ \
-  --profile fun-readwrite \
-  --exclude "*.sh"
+/home/trevorlitsey/.openclaw/workspace/food-journal/sync-to-s3.sh [YYYY-MM-DD]
 ```
+
+**no manual sync needed** — the agent handles this on every log entry.
 
 ### data file format
 ```json
