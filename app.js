@@ -119,14 +119,18 @@ async function renderWeekChart(currentDate) {
   const goalFrac = BASE_GOAL / maxCal;
   const goalLineTop = Math.round(100 - LABEL_H - GAP - goalFrac * BAR_AREA);
 
-  // Weekly totals — exclude today and days likely missing logs (< 800 cal)
+  // Weekly totals — exclude today unless dinner is logged; skip days likely missing logs (< 800 cal)
   const todayDateStr = todayStr();
   const MIN_CAL_THRESHOLD = 800; // below this = probably an incomplete log day
   let weekCalIn = 0, weekBurned = 0, weekGoal = 0, daysWithData = 0;
   rangeDates.forEach((d, i) => {
     const e = entries[i];
     if (!e) return;
-    if (d === todayDateStr) return; // exclude today
+    if (d === todayDateStr) {
+      // only include today if dinner has been logged
+      const hasDinner = (e.entries || []).some(entry => entry.meal && entry.meal.toLowerCase().includes('dinner'));
+      if (!hasDinner) return;
+    }
     if ((e.totals.calories_in || 0) < MIN_CAL_THRESHOLD) return; // likely missed logging
     weekCalIn += e.totals.calories_in || 0;
     weekBurned += e.totals.calories_burned || 0;
