@@ -439,6 +439,9 @@ body {
 .carbs-color   { background: rgba(154,230,180,0.15); color: #276749; }
 .fat-color     { background: rgba(246,173,85,0.15);  color: #975A16; }
 
+.macro-over  { font-size: 0.68rem; opacity: 0.75; color: #C45700; }
+.macro-under { font-size: 0.68rem; opacity: 0.75; color: #2D7A42; }
+
 .week-col {
   flex: 1;
   display: flex;

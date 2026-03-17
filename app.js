@@ -177,9 +177,18 @@ async function renderWeekChart(currentDate) {
       const diffClass = isOver ? 'over' : isUnder ? 'under' : 'on-track';
       const diffLabel = isOver ? `+${diffAbs.toLocaleString()} over` : isUnder ? `${diffAbs.toLocaleString()} under` : 'on track';
       summaryEl.style.display = '';
+      const avgCalGoal = weekGoal / daysWithData;
+      const tgtP = Math.round(avgCalGoal * 0.25 / 4);
+      const tgtC = Math.round(avgCalGoal * 0.50 / 4);
+      const tgtF = Math.round(avgCalGoal * 0.25 / 9);
       const avgP = Math.round(weekProtein / daysWithData);
       const avgC = Math.round(weekCarbs / daysWithData);
       const avgF = Math.round(weekFat / daysWithData);
+      function macroDiff(actual, target) {
+        const d = actual - target;
+        if (Math.abs(d) < 5) return '';
+        return d > 0 ? `<span class="macro-over">+${d}</span>` : `<span class="macro-under">${d}</span>`;
+      }
       summaryEl.innerHTML = `
         <div class="week-summary-row">
           <span class="week-summary-label">${daysWithData} day${daysWithData !== 1 ? 's' : ''}</span>
@@ -188,9 +197,9 @@ async function renderWeekChart(currentDate) {
         </div>
         <div class="week-macro-row">
           <span class="week-macro-label">avg/day</span>
-          <span class="week-macro-stat protein-color">P ${avgP}g</span>
-          <span class="week-macro-stat carbs-color">C ${avgC}g</span>
-          <span class="week-macro-stat fat-color">F ${avgF}g</span>
+          <span class="week-macro-stat protein-color">P ${avgP}g ${macroDiff(avgP, tgtP)}</span>
+          <span class="week-macro-stat carbs-color">C ${avgC}g ${macroDiff(avgC, tgtC)}</span>
+          <span class="week-macro-stat fat-color">F ${avgF}g ${macroDiff(avgF, tgtF)}</span>
         </div>
       `;
     } else {
