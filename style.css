@@ -253,9 +253,9 @@ body {
 
 .macro-row {
   display: grid;
-  grid-template-columns: 70px 1fr 96px;
+  grid-template-columns: 55px 1fr 96px;
   align-items: center;
-  gap: 12px;
+  gap: 8px;
 }
 
 .macro-name {
