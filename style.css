@@ -251,23 +251,40 @@ body {
   gap: 10px;
 }
 
-.macro-row {
-  display: grid;
-  grid-template-columns: 55px 1fr 96px;
-  align-items: center;
-  gap: 8px;
+.macro-block {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.macro-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
 }
 
 .macro-name {
-  font-size: 0.85rem;
-  font-weight: 500;
+  font-size: 0.78rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--text-3);
+}
+
+.macro-diff {
+  font-size: 0.78rem;
+  font-weight: 600;
   color: var(--text-2);
+}
+
+.macro-diff.over {
+  color: var(--orange);
 }
 
 .macro-track {
   background: var(--surface-2);
   border-radius: 99px;
-  height: 8px;
+  height: 10px;
   overflow: hidden;
 }
 
@@ -280,19 +297,24 @@ body {
 .macro-fill.protein { background: var(--macro-protein); }
 .macro-fill.carbs   { background: var(--macro-carbs); }
 .macro-fill.fat     { background: var(--macro-fat); }
+.macro-fill.over    { opacity: 0.8; }
 
-.macro-val {
-  font-size: 0.85rem;
-  font-weight: 600;
-  text-align: right;
-  color: var(--text);
-  white-space: nowrap;
+.macro-footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
 }
 
-.macro-target {
+.macro-actual {
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--text);
+}
+
+.macro-goal {
+  font-size: 0.78rem;
   font-weight: 400;
   color: var(--text-3);
-  font-size: 0.78rem;
 }
 
 /* ── Progress bar ── */
