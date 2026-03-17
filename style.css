@@ -286,6 +286,13 @@ body {
   font-weight: 600;
   text-align: right;
   color: var(--text);
+  white-space: nowrap;
+}
+
+.macro-target {
+  font-weight: 400;
+  color: var(--text-3);
+  font-size: 0.78rem;
 }
 
 /* ── Progress bar ── */

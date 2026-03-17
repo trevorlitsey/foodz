@@ -78,13 +78,14 @@ function getStatusMessage(caloriesIn, goal, netCalories) {
 
 function renderMacroBar(name, value, max, className) {
   const pct = max > 0 ? clamp(value / max * 100, 0, 100) : 0;
+  const over = value > max;
   return `
     <div class="macro-row">
       <div class="macro-name">${name}</div>
       <div class="macro-track">
-        <div class="macro-fill ${className}" style="width: ${pct}%"></div>
+        <div class="macro-fill ${className}${over ? ' over' : ''}" style="width: ${pct}%"></div>
       </div>
-      <div class="macro-val">${value}g</div>
+      <div class="macro-val">${value}g <span class="macro-target">/ ${max}g</span></div>
     </div>
   `;
 }
