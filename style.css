@@ -334,6 +334,25 @@ body {
   background: var(--orange);
 }
 
+.progress-cal-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  margin-top: 6px;
+}
+
+.progress-cal-in {
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--text);
+}
+
+.progress-cal-goal {
+  font-size: 0.78rem;
+  font-weight: 400;
+  color: var(--text-3);
+}
+
 /* ── Week chart ── */
 .week-chart {
   display: flex;

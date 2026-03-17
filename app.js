@@ -338,6 +338,8 @@ async function renderDay(dateStr) {
     calories_in <= goal_calories
       ? `${(goal_calories - calories_in).toLocaleString()} to go`
       : `${(calories_in - goal_calories).toLocaleString()} over`;
+  document.getElementById('progress-cal-in').textContent = `${calories_in.toLocaleString()} cal`;
+  document.getElementById('progress-cal-goal').textContent = `/ ${goal_calories.toLocaleString()}`;
 
   // Week chart
   await renderWeekChart(dateStr);
