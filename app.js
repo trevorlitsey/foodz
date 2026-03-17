@@ -122,7 +122,7 @@ async function renderWeekChart(currentDate) {
   // Weekly totals — exclude today unless dinner is logged; skip days likely missing logs (< 800 cal)
   const todayDateStr = todayStr();
   const MIN_CAL_THRESHOLD = 800; // below this = probably an incomplete log day
-  let weekCalIn = 0, weekBurned = 0, weekGoal = 0, daysWithData = 0;
+  let weekCalIn = 0, weekBurned = 0, weekGoal = 0, weekProtein = 0, weekCarbs = 0, weekFat = 0, daysWithData = 0;
   rangeDates.forEach((d, i) => {
     const e = entries[i];
     if (!e) return;
@@ -135,6 +135,9 @@ async function renderWeekChart(currentDate) {
     weekCalIn += e.totals.calories_in || 0;
     weekBurned += e.totals.calories_burned || 0;
     weekGoal += e.goal_calories || BASE_GOAL;
+    weekProtein += e.totals.protein || 0;
+    weekCarbs += e.totals.carbs || 0;
+    weekFat += e.totals.fat || 0;
     daysWithData++;
   });
 
@@ -174,11 +177,20 @@ async function renderWeekChart(currentDate) {
       const diffClass = isOver ? 'over' : isUnder ? 'under' : 'on-track';
       const diffLabel = isOver ? `+${diffAbs.toLocaleString()} over` : isUnder ? `${diffAbs.toLocaleString()} under` : 'on track';
       summaryEl.style.display = '';
+      const avgP = Math.round(weekProtein / daysWithData);
+      const avgC = Math.round(weekCarbs / daysWithData);
+      const avgF = Math.round(weekFat / daysWithData);
       summaryEl.innerHTML = `
         <div class="week-summary-row">
           <span class="week-summary-label">${daysWithData} day${daysWithData !== 1 ? 's' : ''}</span>
           <span class="week-summary-stats">${weekCalIn.toLocaleString()} in · ${weekBurned.toLocaleString()} burned · goal ${weekGoal.toLocaleString()}</span>
           <span class="week-summary-diff ${diffClass}">${diffLabel}</span>
+        </div>
+        <div class="week-macro-row">
+          <span class="week-macro-label">avg/day</span>
+          <span class="week-macro-stat protein-color">P ${avgP}g</span>
+          <span class="week-macro-stat carbs-color">C ${avgC}g</span>
+          <span class="week-macro-stat fat-color">F ${avgF}g</span>
         </div>
       `;
     } else {

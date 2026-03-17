@@ -411,6 +411,34 @@ body {
   color: #2D7A42;
 }
 
+.week-macro-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-top: 6px;
+  font-size: 0.75rem;
+}
+
+.week-macro-label {
+  font-weight: 600;
+  color: var(--text-3);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  font-size: 0.7rem;
+  flex-shrink: 0;
+}
+
+.week-macro-stat {
+  font-weight: 600;
+  padding: 2px 8px;
+  border-radius: 99px;
+  font-size: 0.72rem;
+}
+
+.protein-color { background: rgba(99,179,237,0.15); color: #2B6CB0; }
+.carbs-color   { background: rgba(154,230,180,0.15); color: #276749; }
+.fat-color     { background: rgba(246,173,85,0.15);  color: #975A16; }
+
 .week-col {
   flex: 1;
   display: flex;
