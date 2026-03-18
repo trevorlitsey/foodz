@@ -292,12 +292,14 @@ function renderMeals(entries) {
     const hasItems = entry.items && entry.items.length > 0;
     const itemsHtml = hasItems ? entry.items.map((item, itemIdx) => `
       <div class="meal-item-row">
-        <div class="meal-item-name">${item.name}</div>
+        <div class="meal-item-name">
+          ${item.name}
+          <button class="item-delete-btn" onclick="deleteMealItem(currentDate, ${idx}, ${itemIdx})" title="remove item">×</button>
+        </div>
         <div class="meal-item-right">
           <div class="meal-item-cal">${item.calories} cal</div>
           <div class="meal-item-macros">P:${item.protein}g C:${item.carbs}g F:${item.fat}g</div>
         </div>
-        <button class="item-delete-btn" onclick="deleteMealItem(currentDate, ${idx}, ${itemIdx})" title="remove item">×</button>
       </div>
     `).join('') : '';
 

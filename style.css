@@ -641,16 +641,11 @@ body {
   cursor: pointer;
   padding: 2px 4px;
   border-radius: 4px;
-  opacity: 0;
   flex-shrink: 0;
   transition: opacity 0.15s, color 0.15s;
 }
 
 .item-delete-btn:hover { color: #e74c3c; }
-
-.meal-item-row:hover .item-delete-btn {
-  opacity: 1;
-}
 
 /* ── Meals ── */
 .section-title {
@@ -767,6 +762,19 @@ body {
   font-size: 0.82rem;
   color: var(--text-2);
   flex: 1;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.meal-item-name .item-delete-btn {
+  opacity: 0;
+  transition: opacity 0.15s;
+}
+
+.meal-item-row:hover .meal-item-name .item-delete-btn,
+.meal-item-name .item-delete-btn:focus {
+  opacity: 1;
 }
 
 .meal-item-right {
