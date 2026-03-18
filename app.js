@@ -598,6 +598,7 @@ async function submitLog() {
     const parts = [];
     if (data.entries  && data.entries.length  > 0) parts.push(`${data.entries.length} meal${data.entries.length  > 1 ? 's' : ''} logged`);
     if (data.exercise && data.exercise.length > 0) parts.push(`${data.exercise.length} exercise${data.exercise.length > 1 ? 's' : ''} logged`);
+    if (data.edits    && data.edits.length    > 0) parts.push(data.edits.join(', '));
     const summary = parts.join(' · ') || 'logged';
 
     resolveQueueItem(queueId, true, summary);
