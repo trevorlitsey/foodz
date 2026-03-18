@@ -615,8 +615,8 @@ body {
 
 .meal-header-right {
   display: flex;
-  align-items: center;
-  gap: 8px;
+  align-items: flex-start;
+  gap: 6px;
   flex-shrink: 0;
 }
 
@@ -735,6 +735,11 @@ body {
   font-size: 0.82rem;
   color: var(--text-2);
   flex: 1;
+}
+
+.meal-item-right {
+  text-align: right;
+  flex-shrink: 0;
 }
 
 .meal-item-cal {
