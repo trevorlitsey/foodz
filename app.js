@@ -270,6 +270,18 @@ window.deleteMealEntry = async function(dateStr, idx) {
   }
 };
 
+window.deleteMealItem = async function(dateStr, entryIdx, itemIdx) {
+  if (!confirm('remove this item?')) return;
+  try {
+    const res = await fetch(`${API_URL}/day/${dateStr}/entries/${entryIdx}/items/${itemIdx}`, { method: 'DELETE' });
+    if (!res.ok) throw new Error('delete failed');
+    delete weekDataCache[dateStr];
+    renderDay(dateStr);
+  } catch (err) {
+    alert('error: ' + err.message);
+  }
+};
+
 // Track current date for delete handlers
 let currentDate = '';
 
@@ -278,13 +290,14 @@ function renderMeals(entries) {
   container.innerHTML = entries.map((entry, idx) => {
     const emoji = getMealEmoji(entry.meal);
     const hasItems = entry.items && entry.items.length > 0;
-    const itemsHtml = hasItems ? entry.items.map(item => `
+    const itemsHtml = hasItems ? entry.items.map((item, itemIdx) => `
       <div class="meal-item-row">
         <div class="meal-item-name">${item.name}</div>
         <div class="meal-item-right">
           <div class="meal-item-cal">${item.calories} cal</div>
           <div class="meal-item-macros">P:${item.protein}g C:${item.carbs}g F:${item.fat}g</div>
         </div>
+        <button class="item-delete-btn" onclick="deleteMealItem(currentDate, ${idx}, ${itemIdx})" title="remove item">×</button>
       </div>
     `).join('') : '';
 
@@ -295,13 +308,11 @@ function renderMeals(entries) {
             <div class="meal-name">
               <span class="meal-emoji">${emoji}</span>
               ${entry.meal}
+              <button class="entry-delete-btn meal-title-delete" onclick="deleteMealEntry(currentDate, ${idx})" title="delete">×</button>
             </div>
             ${entry.description ? `<div class="meal-description">${entry.description}</div>` : ''}
           </div>
-          <div class="meal-header-right">
-            <div class="meal-cal-badge">${entry.calories} cal</div>
-            <button class="entry-delete-btn" onclick="deleteMealEntry(currentDate, ${idx})" title="delete">×</button>
-          </div>
+          <div class="meal-cal-badge">${entry.calories} cal</div>
         </div>
         <div class="meal-macros">
           <div class="meal-macro">P <span>${entry.protein}g</span></div>

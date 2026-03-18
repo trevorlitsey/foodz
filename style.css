@@ -50,15 +50,15 @@ body {
   max-width: 680px;
   margin: 0 auto;
   padding: 16px 20px;
-  display: flex;
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
   align-items: center;
-  justify-content: space-between;
 }
 
 .header-right {
   display: flex;
   align-items: center;
-  gap: 12px;
+  justify-content: flex-end;
 }
 
 .logo {
@@ -613,11 +613,36 @@ body {
   color: #e53e3e;
 }
 
-.meal-header-right {
-  display: flex;
-  align-items: flex-start;
-  gap: 6px;
+.meal-title-delete {
+  opacity: 0;
+  margin-left: 2px;
+  transition: opacity 0.15s;
+  vertical-align: middle;
+}
+
+.meal-name:hover .meal-title-delete,
+.meal-name .meal-title-delete:focus {
+  opacity: 1;
+}
+
+.item-delete-btn {
+  background: none;
+  border: none;
+  color: var(--text-3);
+  font-size: 0.85rem;
+  line-height: 1;
+  cursor: pointer;
+  padding: 2px 4px;
+  border-radius: 4px;
+  opacity: 0;
   flex-shrink: 0;
+  transition: opacity 0.15s, color 0.15s;
+}
+
+.item-delete-btn:hover { color: #e74c3c; }
+
+.meal-item-row:hover .item-delete-btn {
+  opacity: 1;
 }
 
 /* ── Meals ── */
