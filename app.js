@@ -222,7 +222,7 @@ async function renderWeekChart(currentDate) {
   }
 }
 
-function renderExercise(exercise) {
+function renderExercise(exercise, dateStr) {
   const section = document.getElementById('exercise-section');
   const list = document.getElementById('exercise-list');
 
@@ -232,16 +232,46 @@ function renderExercise(exercise) {
   }
 
   section.style.display = '';
-  list.innerHTML = exercise.map(ex => `
+  list.innerHTML = exercise.map((ex, idx) => `
     <div class="exercise-item">
       <div>
         <div class="exercise-name">${ex.activity}</div>
         <div class="exercise-meta">${ex.duration_minutes} min${ex.notes ? ' · ' + ex.notes : ''}</div>
       </div>
-      <div class="exercise-cal">-${ex.calories_burned} cal</div>
+      <div class="exercise-right">
+        <div class="exercise-cal">-${ex.calories_burned} cal</div>
+        <button class="entry-delete-btn" onclick="deleteExercise('${dateStr}', ${idx})" title="delete">×</button>
+      </div>
     </div>
   `).join('');
 }
+
+window.deleteExercise = async function(dateStr, idx) {
+  if (!confirm('remove this exercise entry?')) return;
+  try {
+    const res = await fetch(`${API_URL}/day/${dateStr}/exercise/${idx}`, { method: 'DELETE' });
+    if (!res.ok) throw new Error('delete failed');
+    delete weekDataCache[dateStr];
+    renderDay(dateStr);
+  } catch (err) {
+    alert('error: ' + err.message);
+  }
+};
+
+window.deleteMealEntry = async function(dateStr, idx) {
+  if (!confirm('remove this meal entry?')) return;
+  try {
+    const res = await fetch(`${API_URL}/day/${dateStr}/entries/${idx}`, { method: 'DELETE' });
+    if (!res.ok) throw new Error('delete failed');
+    delete weekDataCache[dateStr];
+    renderDay(dateStr);
+  } catch (err) {
+    alert('error: ' + err.message);
+  }
+};
+
+// Track current date for delete handlers
+let currentDate = '';
 
 function renderMeals(entries) {
   const container = document.getElementById('meals-list');
@@ -268,7 +298,10 @@ function renderMeals(entries) {
             </div>
             ${entry.description ? `<div class="meal-description">${entry.description}</div>` : ''}
           </div>
-          <div class="meal-cal-badge">${entry.calories} cal</div>
+          <div class="meal-header-right">
+            <div class="meal-cal-badge">${entry.calories} cal</div>
+            <button class="entry-delete-btn" onclick="deleteMealEntry(currentDate, ${idx})" title="delete">×</button>
+          </div>
         </div>
         <div class="meal-macros">
           <div class="meal-macro">P <span>${entry.protein}g</span></div>
@@ -324,6 +357,7 @@ async function renderDay(dateStr) {
 
   document.getElementById('day-view').style.display = '';
   document.getElementById('btn-date').textContent = formatDate(dateStr);
+  currentDate = dateStr;
 
   const { totals, goal_calories, entries, exercise } = data;
   const { calories_in, calories_burned, net, protein, carbs, fat } = totals;
@@ -385,7 +419,7 @@ async function renderDay(dateStr) {
   await renderWeekChart(dateStr);
 
   // Exercise
-  renderExercise(exercise);
+  renderExercise(exercise, dateStr);
 
   // Meals
   renderMeals(entries);

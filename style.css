@@ -581,6 +581,12 @@ body {
   margin-top: 2px;
 }
 
+.exercise-right {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
 .exercise-cal {
   font-size: 0.85rem;
   font-weight: 600;
@@ -588,6 +594,30 @@ body {
   background: #E8F8EC;
   padding: 4px 10px;
   border-radius: 99px;
+}
+
+.entry-delete-btn {
+  background: none;
+  border: none;
+  color: var(--text-3);
+  font-size: 1rem;
+  line-height: 1;
+  cursor: pointer;
+  padding: 2px 4px;
+  border-radius: 4px;
+  opacity: 0.4;
+  transition: opacity 0.15s, color 0.15s;
+}
+.entry-delete-btn:hover {
+  opacity: 1;
+  color: #e53e3e;
+}
+
+.meal-header-right {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-shrink: 0;
 }
 
 /* ── Meals ── */
