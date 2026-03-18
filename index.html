@@ -18,30 +18,42 @@
     <header class="app-header">
       <div class="header-inner">
         <div class="logo">foodz <span class="logo-emoji">🍜</span></div>
-        <div class="date-nav">
-          <button id="btn-prev" class="nav-btn" aria-label="Previous day">←</button>
-          <button id="btn-date" class="date-display" id="date-display">—</button>
-          <button id="btn-next" class="nav-btn" aria-label="Next day">→</button>
+        <div class="header-right">
+          <div class="date-nav">
+            <button id="btn-prev" class="nav-btn" aria-label="Previous day">←</button>
+            <button id="btn-date" class="date-display" id="date-display">—</button>
+            <button id="btn-next" class="nav-btn" aria-label="Next day">→</button>
+          </div>
+          <button id="btn-log-open" class="log-open-btn" aria-label="Log food or exercise">+ log</button>
         </div>
       </div>
     </header>
 
-    <main class="main-content">
-
-      <!-- Log Input -->
-      <div class="log-input-card" id="log-input-card">
-        <div class="log-input-label">log food or exercise</div>
+    <!-- Log modal -->
+    <div id="log-modal" class="log-modal" aria-hidden="true">
+      <div class="log-modal-backdrop" id="log-modal-backdrop"></div>
+      <div class="log-modal-card" role="dialog" aria-label="Log food or exercise">
+        <div class="log-modal-header">
+          <div class="log-modal-title">log food or exercise</div>
+          <button class="log-modal-close" id="btn-log-close" aria-label="Close">✕</button>
+        </div>
         <textarea
           id="log-textarea"
           class="log-input-textarea"
           placeholder="breakfast: 2 eggs, toast with butter, coffee&#10;or: ran 30 min, afternoon snack: apple + peanut butter"
-          rows="3"
+          rows="4"
         ></textarea>
         <div class="log-input-footer">
           <div class="log-input-status" id="log-status"></div>
           <button class="log-submit-btn" id="log-submit-btn">log it</button>
         </div>
       </div>
+    </div>
+
+    <main class="main-content">
+
+      <!-- Processing queue -->
+      <div id="log-queue" class="log-queue"></div>
 
       <!-- Loading state -->
       <div id="loading" class="loading-state">

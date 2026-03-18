@@ -396,7 +396,50 @@ async function renderDay(dateStr) {
   document.getElementById('btn-next').disabled = idx >= allDates.length - 1;
 }
 
-// ── Log Input ──
+// ── Log Queue ──
+
+let queueIdCounter = 0;
+
+function addQueueItem(text) {
+  const id = ++queueIdCounter;
+  const queue = document.getElementById('log-queue');
+  const truncated = text.length > 48 ? text.slice(0, 48) + '…' : text;
+  const el = document.createElement('div');
+  el.className = 'queue-item queue-item--processing';
+  el.id = `qi-${id}`;
+  el.innerHTML = `<div class="qi-spinner"></div><span class="qi-text">${truncated}</span>`;
+  queue.appendChild(el);
+  return id;
+}
+
+function resolveQueueItem(id, success, message) {
+  const el = document.getElementById(`qi-${id}`);
+  if (!el) return;
+  el.className = `queue-item queue-item--${success ? 'success' : 'error'}`;
+  el.innerHTML = `<span class="qi-icon">${success ? '✓' : '⚠'}</span><span class="qi-text">${message}</span>`;
+  setTimeout(() => {
+    el.classList.add('queue-item--fade');
+    setTimeout(() => el.remove(), 400);
+  }, 3000);
+}
+
+// ── Log Modal ──
+
+function openLogModal() {
+  const modal = document.getElementById('log-modal');
+  modal.classList.add('open');
+  modal.setAttribute('aria-hidden', 'false');
+  document.body.style.overflow = 'hidden';
+  setTimeout(() => document.getElementById('log-textarea').focus(), 50);
+}
+
+function closeLogModal() {
+  const modal = document.getElementById('log-modal');
+  modal.classList.remove('open');
+  modal.setAttribute('aria-hidden', 'true');
+  document.body.style.overflow = '';
+  setLogStatus('', '');
+}
 
 function setLogStatus(cls, text) {
   const el = document.getElementById('log-status');
@@ -421,6 +464,18 @@ async function fetchDatesAndSync() {
 function initLogInput() {
   const btn = document.getElementById('log-submit-btn');
   const textarea = document.getElementById('log-textarea');
+  const openBtn = document.getElementById('btn-log-open');
+  const closeBtn = document.getElementById('btn-log-close');
+  const backdrop = document.getElementById('log-modal-backdrop');
+
+  openBtn.addEventListener('click', openLogModal);
+  closeBtn.addEventListener('click', closeLogModal);
+  backdrop.addEventListener('click', closeLogModal);
+
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape') closeLogModal();
+  });
+
   btn.addEventListener('click', submitLog);
   textarea.addEventListener('keydown', (e) => {
     if ((e.metaKey || e.ctrlKey) && e.key === 'Enter') {
@@ -436,6 +491,7 @@ async function submitLog() {
   const text = textarea.value.trim();
   if (!text || btn.disabled) return;
 
+  const queueId = addQueueItem(text);
   btn.disabled = true;
   setLogStatus('processing', 'parsing...');
 
@@ -456,19 +512,24 @@ async function submitLog() {
     const parts = [];
     if (data.entries  && data.entries.length  > 0) parts.push(`${data.entries.length} meal${data.entries.length  > 1 ? 's' : ''} logged`);
     if (data.exercise && data.exercise.length > 0) parts.push(`${data.exercise.length} exercise${data.exercise.length > 1 ? 's' : ''} logged`);
-    setLogStatus('success', '✓ ' + (parts.join(' · ') || 'logged'));
+    const summary = parts.join(' · ') || 'logged';
 
-    // Clear input and refresh after a moment
+    setLogStatus('success', '✓ ' + summary);
+    resolveQueueItem(queueId, true, summary);
+
+    // Close modal and refresh after a moment
     setTimeout(() => {
       textarea.value = '';
       setLogStatus('', '');
       btn.disabled = false;
+      closeLogModal();
       delete weekDataCache[date];
       renderDay(date);
       fetchDatesAndSync();
-    }, 2000);
+    }, 1200);
   } catch (err) {
     setLogStatus('error', '⚠ ' + err.message);
+    resolveQueueItem(queueId, false, err.message);
     btn.disabled = false;
   }
 }

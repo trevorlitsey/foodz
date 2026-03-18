@@ -55,6 +55,12 @@ body {
   justify-content: space-between;
 }
 
+.header-right {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
 .logo {
   font-size: 1.4rem;
   font-weight: 700;
@@ -729,6 +735,7 @@ body {
   .main-content { padding: 16px 14px 50px; }
   .week-chart { height: 80px; }
   .week-bars { height: 60px; }
+  .log-open-btn { padding: 7px 12px; font-size: 0.8rem; }
 }
 
 /* ── Transitions ── */
@@ -741,29 +748,121 @@ body {
   to   { opacity: 1; transform: translateY(0); }
 }
 
-/* ── Log Input ── */
-.log-input-card {
+/* ── Log nav button ── */
+.log-open-btn {
+  background: var(--accent);
+  color: white;
+  border: none;
+  border-radius: 99px;
+  padding: 7px 16px;
+  font-family: var(--font);
+  font-size: 0.85rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.15s, transform 0.1s;
+  white-space: nowrap;
+}
+
+.log-open-btn:hover {
+  background: var(--accent-dark);
+}
+
+.log-open-btn:active {
+  transform: scale(0.96);
+}
+
+/* ── Log Modal ── */
+.log-modal {
+  position: fixed;
+  inset: 0;
+  z-index: 200;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 0.2s ease;
+}
+
+@media (min-width: 520px) {
+  .log-modal {
+    align-items: center;
+  }
+}
+
+.log-modal.open {
+  pointer-events: all;
+  opacity: 1;
+}
+
+.log-modal-backdrop {
+  position: absolute;
+  inset: 0;
+  background: rgba(0,0,0,0.35);
+  backdrop-filter: blur(2px);
+}
+
+.log-modal-card {
+  position: relative;
+  z-index: 1;
   background: var(--surface);
-  border-radius: var(--radius);
-  box-shadow: var(--shadow);
-  padding: 20px;
-  margin-bottom: 20px;
-  border: 2px solid transparent;
-  transition: border-color 0.2s;
+  border-radius: var(--radius) var(--radius) 0 0;
+  padding: 24px 20px 32px;
+  width: 100%;
+  max-width: 560px;
+  box-shadow: 0 -4px 40px rgba(0,0,0,0.15);
+  transform: translateY(20px);
+  transition: transform 0.25s cubic-bezier(0.34, 1.2, 0.64, 1);
 }
 
-.log-input-card:focus-within {
-  border-color: var(--accent-light);
+@media (min-width: 520px) {
+  .log-modal-card {
+    border-radius: var(--radius);
+    transform: translateY(16px);
+    margin: 0 20px;
+  }
 }
 
-.log-input-label {
+.log-modal.open .log-modal-card {
+  transform: translateY(0);
+}
+
+.log-modal-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 14px;
+}
+
+.log-modal-title {
   font-size: 0.78rem;
   font-weight: 600;
   text-transform: uppercase;
   letter-spacing: 0.06em;
   color: var(--text-3);
-  margin-bottom: 10px;
 }
+
+.log-modal-close {
+  background: var(--surface-2);
+  border: none;
+  border-radius: 50%;
+  width: 28px;
+  height: 28px;
+  font-size: 0.75rem;
+  cursor: pointer;
+  color: var(--text-3);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 0.15s, color 0.15s;
+}
+
+.log-modal-close:hover {
+  background: var(--border);
+  color: var(--text);
+}
+
+/* ── Log Input (shared by modal) ── */
 
 .log-input-textarea {
   width: 100%;
@@ -850,14 +949,66 @@ body {
   cursor: not-allowed;
 }
 
-.log-queue-indicator {
-  font-size: 0.75rem;
-  background: rgba(255,159,67,0.12);
-  color: var(--orange);
-  border-radius: 20px;
-  padding: 3px 10px;
-  font-weight: 600;
-  display: inline-flex;
+/* ── Processing Queue ── */
+.log-queue {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-bottom: 4px;
+}
+
+.log-queue:empty {
+  display: none;
+}
+
+.queue-item {
+  display: flex;
   align-items: center;
-  gap: 5px;
+  gap: 8px;
+  padding: 8px 14px;
+  border-radius: var(--radius-sm);
+  font-size: 0.82rem;
+  font-weight: 500;
+  transition: opacity 0.4s ease, transform 0.4s ease;
+}
+
+.queue-item--processing {
+  background: rgba(255,159,67,0.1);
+  color: #975A16;
+}
+
+.queue-item--success {
+  background: rgba(81,207,102,0.12);
+  color: #276749;
+}
+
+.queue-item--error {
+  background: rgba(255,107,107,0.12);
+  color: #C53030;
+}
+
+.queue-item--fade {
+  opacity: 0;
+  transform: translateY(-4px);
+}
+
+.qi-spinner {
+  width: 12px;
+  height: 12px;
+  border: 2px solid rgba(255,159,67,0.25);
+  border-top-color: var(--orange);
+  border-radius: 50%;
+  animation: spin 0.7s linear infinite;
+  flex-shrink: 0;
+}
+
+.qi-icon {
+  font-size: 0.8rem;
+  flex-shrink: 0;
+}
+
+.qi-text {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
