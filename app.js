@@ -41,20 +41,23 @@ function clamp(val, min, max) {
   return Math.max(min, Math.min(max, val));
 }
 
+// ── API config ──
+const API_URL = 'https://api.foodz.trevor.fail';
+
 // ── App state ──
 let allDates = [];
 let currentDateIndex = 0;
 let weekDataCache = {};
 
 async function fetchIndex() {
-  const res = await fetch('data/index.json');
+  const res = await fetch(`${API_URL}/dates`);
   return res.json();
 }
 
 async function fetchDay(dateStr) {
   if (weekDataCache[dateStr]) return weekDataCache[dateStr];
   try {
-    const res = await fetch(`data/${dateStr}.json`);
+    const res = await fetch(`${API_URL}/day/${dateStr}`);
     if (!res.ok) return null;
     const data = await res.json();
     weekDataCache[dateStr] = data;
@@ -90,7 +93,7 @@ function renderMacroBar(name, value, max, className) {
         <span class="macro-diff ${over ? 'over' : ''}">${diffLabel}</span>
       </div>
       <div class="macro-track">
-        <div class="macro-fill ${className}${over ? ' over' : ''}" style="width: ${pct}%"></div>
+        <div class="macro-fill ${className}${over ? ' over' : ''}" style="width: var(--macro-start, 0%)" data-target="${pct}"></div>
       </div>
       <div class="macro-footer">
         <span class="macro-actual">${value}g</span>
@@ -305,7 +308,16 @@ async function renderDay(dateStr) {
   document.getElementById('loading').style.display = 'none';
 
   if (!data) {
-    document.getElementById('no-data').style.display = '';
+    // Update nav buttons even when no data (fixes prev/next state being stale)
+    const noDataIdx = allDates.indexOf(dateStr);
+    document.getElementById('btn-prev').disabled = noDataIdx <= 0;
+    document.getElementById('btn-next').disabled = noDataIdx >= allDates.length - 1;
+
+    const isToday = dateStr === todayStr();
+    const noDataEl = document.getElementById('no-data');
+    noDataEl.querySelector('p').textContent = isToday ? 'nothing logged yet today' : 'no data for this day';
+    noDataEl.querySelector('small').textContent = isToday ? 'log something in #foodz 🍜' : 'try another date';
+    noDataEl.style.display = '';
     document.getElementById('btn-date').textContent = formatDate(dateStr);
     return;
   }
@@ -334,10 +346,28 @@ async function renderDay(dateStr) {
   const carbTarget    = Math.round(goal_calories * 0.50 / 4);  // 50% carbs
   const fatTarget     = Math.round(goal_calories * 0.25 / 9);  // 25% fat
 
-  document.getElementById('macros-grid').innerHTML =
+  // Capture current macro widths before replacing HTML so we can animate from them
+  const prevMacroWidths = {};
+  document.querySelectorAll('.macro-fill[data-target]').forEach(el => {
+    const cls = [...el.classList].find(c => ['protein','carbs','fat'].includes(c));
+    if (cls) prevMacroWidths[cls] = el.getBoundingClientRect().width / el.parentElement.getBoundingClientRect().width * 100;
+  });
+
+  const macroGrid = document.getElementById('macros-grid');
+  macroGrid.innerHTML =
     renderMacroBar('protein', protein, proteinTarget, 'protein') +
     renderMacroBar('carbs', carbs, carbTarget, 'carbs') +
     renderMacroBar('fat', fat, fatTarget, 'fat');
+
+  // Set starting width to previous value (or 0 on first load), then animate to target
+  macroGrid.querySelectorAll('.macro-fill[data-target]').forEach(el => {
+    const cls = [...el.classList].find(c => ['protein','carbs','fat'].includes(c));
+    const startPct = prevMacroWidths[cls] ?? 0;
+    el.style.width = startPct + '%';
+    requestAnimationFrame(() => {
+      el.style.width = el.dataset.target + '%';
+    });
+  });
 
   // Progress bar
   const pct = clamp(calories_in / goal_calories * 100, 0, 105);
@@ -366,12 +396,96 @@ async function renderDay(dateStr) {
   document.getElementById('btn-next').disabled = idx >= allDates.length - 1;
 }
 
+// ── Log Input ──
+
+function setLogStatus(cls, text) {
+  const el = document.getElementById('log-status');
+  el.className = 'log-input-status' + (cls ? ' ' + cls : '');
+  if (cls === 'processing') {
+    el.innerHTML = `<div class="log-spinner"></div><span>${text}</span>`;
+  } else {
+    el.textContent = text;
+  }
+}
+
+async function fetchDatesAndSync() {
+  try {
+    const index = await fetchIndex();
+    index.dates.sort().forEach(d => {
+      if (!allDates.includes(d)) allDates.push(d);
+    });
+    allDates.sort();
+  } catch {}
+}
+
+function initLogInput() {
+  const btn = document.getElementById('log-submit-btn');
+  const textarea = document.getElementById('log-textarea');
+  btn.addEventListener('click', submitLog);
+  textarea.addEventListener('keydown', (e) => {
+    if ((e.metaKey || e.ctrlKey) && e.key === 'Enter') {
+      e.preventDefault();
+      submitLog();
+    }
+  });
+}
+
+async function submitLog() {
+  const textarea = document.getElementById('log-textarea');
+  const btn = document.getElementById('log-submit-btn');
+  const text = textarea.value.trim();
+  if (!text || btn.disabled) return;
+
+  btn.disabled = true;
+  setLogStatus('processing', 'parsing...');
+
+  // Use the currently viewed date so you can log for any day you're viewing
+  const date = allDates[currentDateIndex] || todayStr();
+
+  try {
+    const res = await fetch(`${API_URL}/log`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ text, date })
+    });
+    const data = await res.json();
+
+    if (!res.ok) throw new Error(data.error || 'failed');
+
+    // Build summary
+    const parts = [];
+    if (data.entries  && data.entries.length  > 0) parts.push(`${data.entries.length} meal${data.entries.length  > 1 ? 's' : ''} logged`);
+    if (data.exercise && data.exercise.length > 0) parts.push(`${data.exercise.length} exercise${data.exercise.length > 1 ? 's' : ''} logged`);
+    setLogStatus('success', '✓ ' + (parts.join(' · ') || 'logged'));
+
+    // Clear input and refresh after a moment
+    setTimeout(() => {
+      textarea.value = '';
+      setLogStatus('', '');
+      btn.disabled = false;
+      delete weekDataCache[date];
+      renderDay(date);
+      fetchDatesAndSync();
+    }, 2000);
+  } catch (err) {
+    setLogStatus('error', '⚠ ' + err.message);
+    btn.disabled = false;
+  }
+}
+
 // ── Navigation ──
 function goTo(dateStr) {
   currentDateIndex = allDates.indexOf(dateStr);
-  history.replaceState({}, '', `#${dateStr}`);
+  history.pushState({ date: dateStr }, '', `?date=${dateStr}`);
   renderDay(dateStr);
 }
+
+window.addEventListener('popstate', (e) => {
+  const date = (e.state && e.state.date) || todayStr();
+  currentDateIndex = allDates.indexOf(date);
+  if (currentDateIndex < 0 && allDates.length > 0) currentDateIndex = allDates.length - 1;
+  renderDay(allDates[currentDateIndex] || date);
+});
 
 document.getElementById('btn-prev').addEventListener('click', () => {
   if (currentDateIndex > 0) {
@@ -410,14 +524,22 @@ async function init() {
       allDates.sort();
     }
 
-    // Check URL hash for a date
-    const hash = window.location.hash.replace('#', '');
+    // Check URL query string for a date (?date=YYYY-MM-DD)
+    const params = new URLSearchParams(window.location.search);
+    const queryDate = params.get('date');
     let startDate = today; // default: today
-    if (hash && allDates.includes(hash)) {
-      startDate = hash;
+    if (queryDate && /^\d{4}-\d{2}-\d{2}$/.test(queryDate)) {
+      startDate = queryDate;
+      // include even if not in allDates (will show no-data state)
+      if (!allDates.includes(startDate)) {
+        allDates.push(startDate);
+        allDates.sort();
+      }
     }
 
     currentDateIndex = allDates.indexOf(startDate);
+    // Seed the initial history state so popstate works on browser back
+    history.replaceState({ date: startDate }, '', `?date=${startDate}`);
     await renderDay(startDate);
   } catch (err) {
     console.error('Failed to load data:', err);
@@ -427,3 +549,4 @@ async function init() {
 }
 
 init();
+initLogInput();

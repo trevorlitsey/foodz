@@ -740,3 +740,124 @@ body {
   from { opacity: 0; transform: translateY(8px); }
   to   { opacity: 1; transform: translateY(0); }
 }
+
+/* ── Log Input ── */
+.log-input-card {
+  background: var(--surface);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+  padding: 20px;
+  margin-bottom: 20px;
+  border: 2px solid transparent;
+  transition: border-color 0.2s;
+}
+
+.log-input-card:focus-within {
+  border-color: var(--accent-light);
+}
+
+.log-input-label {
+  font-size: 0.78rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--text-3);
+  margin-bottom: 10px;
+}
+
+.log-input-textarea {
+  width: 100%;
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  padding: 12px 14px;
+  font-family: var(--font);
+  font-size: 0.95rem;
+  color: var(--text);
+  resize: none;
+  min-height: 72px;
+  transition: border-color 0.2s, background 0.2s;
+  outline: none;
+  line-height: 1.5;
+}
+
+.log-input-textarea:focus {
+  border-color: var(--accent);
+  background: var(--surface);
+}
+
+.log-input-textarea::placeholder {
+  color: var(--text-3);
+}
+
+.log-input-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-top: 10px;
+  gap: 12px;
+}
+
+.log-input-status {
+  font-size: 0.82rem;
+  color: var(--text-3);
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  flex: 1;
+  min-width: 0;
+}
+
+.log-input-status.processing { color: var(--orange); }
+.log-input-status.success { color: var(--green); }
+.log-input-status.error { color: var(--red); }
+
+.log-spinner {
+  width: 14px;
+  height: 14px;
+  border: 2px solid rgba(255,159,67,0.3);
+  border-top-color: var(--orange);
+  border-radius: 50%;
+  animation: spin 0.7s linear infinite;
+  flex-shrink: 0;
+}
+
+.log-submit-btn {
+  background: var(--accent);
+  color: white;
+  border: none;
+  border-radius: var(--radius-sm);
+  padding: 9px 20px;
+  font-family: var(--font);
+  font-size: 0.88rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.15s, transform 0.1s, opacity 0.15s;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+.log-submit-btn:hover:not(:disabled) {
+  background: var(--accent-dark);
+}
+
+.log-submit-btn:active:not(:disabled) {
+  transform: scale(0.97);
+}
+
+.log-submit-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.log-queue-indicator {
+  font-size: 0.75rem;
+  background: rgba(255,159,67,0.12);
+  color: var(--orange);
+  border-radius: 20px;
+  padding: 3px 10px;
+  font-weight: 600;
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+}

@@ -27,6 +27,22 @@
     </header>
 
     <main class="main-content">
+
+      <!-- Log Input -->
+      <div class="log-input-card" id="log-input-card">
+        <div class="log-input-label">log food or exercise</div>
+        <textarea
+          id="log-textarea"
+          class="log-input-textarea"
+          placeholder="breakfast: 2 eggs, toast with butter, coffee&#10;or: ran 30 min, afternoon snack: apple + peanut butter"
+          rows="3"
+        ></textarea>
+        <div class="log-input-footer">
+          <div class="log-input-status" id="log-status"></div>
+          <button class="log-submit-btn" id="log-submit-btn">log it</button>
+        </div>
+      </div>
+
       <!-- Loading state -->
       <div id="loading" class="loading-state">
         <div class="spinner"></div>
