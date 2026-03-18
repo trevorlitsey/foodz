@@ -603,14 +603,7 @@ body {
   border-radius: 99px;
 }
 
-.editable-cal {
-  cursor: pointer;
-  transition: background 0.15s;
-}
 
-.editable-cal:hover {
-  background: #d4f0da;
-}
 
 .entry-delete-btn {
   background: none;

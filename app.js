@@ -241,7 +241,7 @@ function renderExercise(exercise, dateStr) {
         </div>
         <div class="exercise-meta">${ex.duration_minutes} min${ex.notes ? ' · ' + ex.notes : ''}</div>
       </div>
-      <div class="exercise-cal editable-cal" onclick="editExerciseCal(this, '${dateStr}', ${idx}, ${ex.calories_burned})" title="click to edit">-${ex.calories_burned} cal</div>
+      <div class="exercise-cal">-${ex.calories_burned} cal</div>
     </div>
   `).join('');
 }
@@ -256,43 +256,6 @@ window.deleteExercise = async function(dateStr, idx) {
   } catch (err) {
     alert('error: ' + err.message);
   }
-};
-
-window.editExerciseCal = function(el, dateStr, idx, current) {
-  if (el.querySelector('input')) return; // already editing
-  const input = document.createElement('input');
-  input.type = 'number';
-  input.value = current;
-  input.className = 'inline-cal-input';
-  input.style.cssText = 'width:60px;font-size:0.85rem;font-weight:600;color:var(--green);border:1px solid var(--accent);border-radius:6px;padding:2px 6px;text-align:center;';
-  el.textContent = '';
-  el.appendChild(input);
-  input.focus();
-  input.select();
-
-  const save = async () => {
-    const val = parseInt(input.value, 10);
-    if (isNaN(val) || val < 0) { renderDay(dateStr); return; }
-    try {
-      const res = await fetch(`${API_URL}/day/${dateStr}/exercise/${idx}`, {
-        method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ calories_burned: val })
-      });
-      if (!res.ok) throw new Error('save failed');
-      delete weekDataCache[dateStr];
-      renderDay(dateStr);
-    } catch (err) {
-      alert('error: ' + err.message);
-      renderDay(dateStr);
-    }
-  };
-
-  input.addEventListener('blur', save);
-  input.addEventListener('keydown', e => {
-    if (e.key === 'Enter') { input.blur(); }
-    if (e.key === 'Escape') { renderDay(dateStr); }
-  });
 };
 
 window.deleteMealEntry = async function(dateStr, idx) {
