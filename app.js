@@ -576,12 +576,15 @@ async function submitLog() {
   if (!text || btn.disabled) return;
 
   const queueId = addQueueItem(text);
-  btn.disabled = true;
-  setLogStatus('processing', 'parsing...');
-
-  // Use the currently viewed date so you can log for any day you're viewing
   const date = allDates[currentDateIndex] || todayStr();
 
+  // Close modal immediately — queue at top shows progress
+  textarea.value = '';
+  setLogStatus('', '');
+  btn.disabled = false;
+  closeLogModal();
+
+  // Process in background
   try {
     const res = await fetch(`${API_URL}/log`, {
       method: 'POST',
@@ -592,29 +595,17 @@ async function submitLog() {
 
     if (!res.ok) throw new Error(data.error || 'failed');
 
-    // Build summary
     const parts = [];
     if (data.entries  && data.entries.length  > 0) parts.push(`${data.entries.length} meal${data.entries.length  > 1 ? 's' : ''} logged`);
     if (data.exercise && data.exercise.length > 0) parts.push(`${data.exercise.length} exercise${data.exercise.length > 1 ? 's' : ''} logged`);
     const summary = parts.join(' · ') || 'logged';
 
-    setLogStatus('success', '✓ ' + summary);
     resolveQueueItem(queueId, true, summary);
-
-    // Close modal and refresh after a moment
-    setTimeout(() => {
-      textarea.value = '';
-      setLogStatus('', '');
-      btn.disabled = false;
-      closeLogModal();
-      delete weekDataCache[date];
-      renderDay(date);
-      fetchDatesAndSync();
-    }, 1200);
+    delete weekDataCache[date];
+    renderDay(date);
+    fetchDatesAndSync();
   } catch (err) {
-    setLogStatus('error', '⚠ ' + err.message);
     resolveQueueItem(queueId, false, err.message);
-    btn.disabled = false;
   }
 }
 
