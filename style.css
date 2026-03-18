@@ -573,18 +573,25 @@ body {
 .exercise-name {
   font-weight: 500;
   text-transform: capitalize;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.exercise-name .meal-title-delete {
+  opacity: 0;
+  transition: opacity 0.15s;
+}
+
+.exercise-name:hover .meal-title-delete,
+.exercise-name .meal-title-delete:focus {
+  opacity: 1;
 }
 
 .exercise-meta {
   font-size: 0.8rem;
   color: var(--text-3);
   margin-top: 2px;
-}
-
-.exercise-right {
-  display: flex;
-  align-items: center;
-  gap: 8px;
 }
 
 .exercise-cal {

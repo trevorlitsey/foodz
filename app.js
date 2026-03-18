@@ -235,13 +235,13 @@ function renderExercise(exercise, dateStr) {
   list.innerHTML = exercise.map((ex, idx) => `
     <div class="exercise-item">
       <div>
-        <div class="exercise-name">${ex.activity}</div>
+        <div class="exercise-name">
+          ${ex.activity}
+          <button class="entry-delete-btn meal-title-delete" onclick="deleteExercise('${dateStr}', ${idx})" title="delete">×</button>
+        </div>
         <div class="exercise-meta">${ex.duration_minutes} min${ex.notes ? ' · ' + ex.notes : ''}</div>
       </div>
-      <div class="exercise-right">
-        <div class="exercise-cal">-${ex.calories_burned} cal</div>
-        <button class="entry-delete-btn" onclick="deleteExercise('${dateStr}', ${idx})" title="delete">×</button>
-      </div>
+      <div class="exercise-cal">-${ex.calories_burned} cal</div>
     </div>
   `).join('');
 }
