@@ -811,7 +811,8 @@ body {
   justify-content: center;
   pointer-events: none;
   opacity: 0;
-  transition: opacity 0.2s ease;
+  visibility: hidden;
+  transition: opacity 0.2s ease, visibility 0.2s ease;
 }
 
 @media (min-width: 520px) {
@@ -823,6 +824,7 @@ body {
 .log-modal.open {
   pointer-events: all;
   opacity: 1;
+  visibility: visible;
 }
 
 .log-modal-backdrop {
