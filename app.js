@@ -22,7 +22,12 @@ function getMealEmoji(meal) {
 function formatDate(dateStr) {
   const [y, m, d] = dateStr.split('-').map(Number);
   const dt = new Date(y, m - 1, d);
-  return dt.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' });
+  const today = new Date(); today.setHours(0,0,0,0);
+  const diffDays = Math.round((today - dt) / 86400000);
+  if (diffDays === 0) return 'today';
+  if (diffDays === 1) return 'yesterday';
+  if (diffDays <= 6) return dt.toLocaleDateString('en-US', { weekday: 'long' });
+  return dt.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
 }
 
 function shortDate(dateStr) {
@@ -105,10 +110,11 @@ function renderMacroBar(name, value, max, className) {
 
 async function renderWeekChart(currentDate) {
   const container = document.getElementById('week-chart');
-  // Get last 7 dates from allDates up to and including current
-  const idx = allDates.indexOf(currentDate);
-  const rangeEnd = idx >= 0 ? idx : allDates.length - 1;
-  const rangeDates = allDates.slice(Math.max(0, rangeEnd - 6), rangeEnd + 1);
+  // Past 7 complete days — always exclude today since it's still in progress
+  const todayExcluded = allDates.filter(d => d !== todayStr());
+  const idx = todayExcluded.indexOf(currentDate) >= 0 ? todayExcluded.indexOf(currentDate) : todayExcluded.length - 1;
+  const rangeEnd = idx >= 0 ? idx : todayExcluded.length - 1;
+  const rangeDates = todayExcluded.slice(Math.max(0, rangeEnd - 6), rangeEnd + 1);
 
   // Fetch all needed data
   const entries = await Promise.all(rangeDates.map(d => fetchDay(d)));
@@ -133,18 +139,12 @@ async function renderWeekChart(currentDate) {
   const goalFrac = BASE_GOAL / maxCal;
   const goalLineTop = Math.round(100 - LABEL_H - GAP - goalFrac * BAR_AREA);
 
-  // Weekly totals — exclude today unless dinner is logged; skip days likely missing logs (< 800 cal)
-  const todayDateStr = todayStr();
+  // Weekly totals — skip days likely missing logs (< 800 cal)
   const MIN_CAL_THRESHOLD = 800; // below this = probably an incomplete log day
   let weekCalIn = 0, weekBurned = 0, weekGoal = 0, weekProtein = 0, weekCarbs = 0, weekFat = 0, daysWithData = 0;
   rangeDates.forEach((d, i) => {
     const e = entries[i];
     if (!e) return;
-    if (d === todayDateStr) {
-      // only include today if dinner has been logged
-      const hasDinner = (e.entries || []).some(entry => entry.meal && entry.meal.toLowerCase().includes('dinner'));
-      if (!hasDinner) return;
-    }
     if ((e.totals.calories_in || 0) < MIN_CAL_THRESHOLD) return; // likely missed logging
     weekCalIn += e.totals.calories_in || 0;
     weekBurned += e.totals.calories_burned || 0;
@@ -357,7 +357,7 @@ async function renderDay(dateStr) {
     // Update nav buttons even when no data (fixes prev/next state being stale)
     const noDataIdx = allDates.indexOf(dateStr);
     document.getElementById('btn-prev').disabled = noDataIdx <= 0;
-    document.getElementById('btn-next').disabled = noDataIdx >= allDates.length - 1;
+    document.getElementById('btn-next').disabled = noDataIdx >= allDates.length - 1 || dateStr >= todayStr();
 
     const isToday = dateStr === todayStr();
     const noDataEl = document.getElementById('no-data');
@@ -440,7 +440,7 @@ async function renderDay(dateStr) {
   // Update nav buttons
   const idx = allDates.indexOf(dateStr);
   document.getElementById('btn-prev').disabled = idx <= 0;
-  document.getElementById('btn-next').disabled = idx >= allDates.length - 1;
+  document.getElementById('btn-next').disabled = idx >= allDates.length - 1 || dateStr >= todayStr();
 }
 
 // ── Log Queue ──
@@ -558,14 +558,34 @@ async function submitLog() {
 
     if (!res.ok) throw new Error(data.error || 'failed');
 
+    // Build a detailed summary from returned data
     const parts = [];
-    if (data.entries  && data.entries.length  > 0) parts.push(`${data.entries.length} meal${data.entries.length  > 1 ? 's' : ''} logged`);
-    if (data.exercise && data.exercise.length > 0) parts.push(`${data.exercise.length} exercise${data.exercise.length > 1 ? 's' : ''} logged`);
-    if (data.edits    && data.edits.length    > 0) parts.push(data.edits.join(', '));
-    const summary = parts.join(' · ') || 'logged';
+    if (data.edits && data.edits.length > 0) {
+      parts.push('updated: ' + data.edits.join('; '));
+    }
+    if (data.entries && data.entries.length > 0) {
+      parts.push(data.entries.map(e => {
+        const itemList = e.items && e.items.length > 0
+          ? e.items.map(i => `${i.name} ${i.calories}cal`).join(', ')
+          : null;
+        return `${e.meal}: ${e.calories} cal${itemList ? ' (' + itemList + ')' : ''}`;
+      }).join(' · '));
+    }
+    if (data.exercise && data.exercise.length > 0) {
+      parts.push(data.exercise.map(ex => `${ex.activity}: -${ex.calories_burned} cal`).join(' · '));
+    }
+    if (data.totals) {
+      const goal = data.goal_calories || 2200;
+      const net = data.totals.net || data.totals.calories_in || 0;
+      const remaining = goal - net;
+      parts.push(`${net} cal net · ${remaining >= 0 ? remaining + ' remaining' : Math.abs(remaining) + ' over'}`);
+    }
+    const summary = parts.join(' — ') || 'logged';
 
     resolveQueueItem(queueId, true, summary);
     delete weekDataCache[date];
+    // Use returned day data to update cache if available, avoiding a re-fetch
+    if (data.day) weekDataCache[date] = data.day;
     renderDay(date);
     fetchDatesAndSync();
   } catch (err) {
@@ -595,7 +615,7 @@ document.getElementById('btn-prev').addEventListener('click', () => {
 });
 
 document.getElementById('btn-next').addEventListener('click', () => {
-  if (currentDateIndex < allDates.length - 1) {
+  if (currentDateIndex < allDates.length - 1 && allDates[currentDateIndex] < todayStr()) {
     currentDateIndex++;
     goTo(allDates[currentDateIndex]);
   }
