@@ -54,13 +54,18 @@ fi
 
 # ── Frontend-only deploy ──
 if [ "$MODE" = "--frontend-only" ]; then
+  echo "📦 building frontend..."
+  (cd "$APP_DIR" && npm run build)
   echo "🌐 deploying frontend to s3://$FRONTEND_BUCKET..."
-  aws --profile "$PROFILE" s3 cp "$APP_DIR/index.html" "s3://$FRONTEND_BUCKET/index.html" \
-    --content-type "text/html" --cache-control "no-cache"
-  aws --profile "$PROFILE" s3 cp "$APP_DIR/app.js" "s3://$FRONTEND_BUCKET/app.js" \
-    --content-type "application/javascript" --cache-control "no-cache"
-  aws --profile "$PROFILE" s3 cp "$APP_DIR/style.css" "s3://$FRONTEND_BUCKET/style.css" \
-    --content-type "text/css" --cache-control "no-cache"
+  aws --profile "$PROFILE" s3 sync "$APP_DIR/dist/" "s3://$FRONTEND_BUCKET/" \
+    --delete \
+    --region "$REGION" \
+    --cache-control "no-cache" \
+    --exclude "*.map"
+  # Ensure correct content-type for key files
+  aws --profile "$PROFILE" s3 cp "s3://$FRONTEND_BUCKET/index.html" "s3://$FRONTEND_BUCKET/index.html" \
+    --content-type "text/html" --cache-control "no-cache" --metadata-directive REPLACE \
+    --region "$REGION"
   echo "✓ frontend deployed → https://foodz.trevor.fail"
   exit 0
 fi
