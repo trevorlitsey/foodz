@@ -1,0 +1,12 @@
+{
+  "name": "foodz-app",
+  "version": "1.0.0",
+  "description": "foodz frontend — vanilla JS food & fitness journal",
+  "scripts": {
+    "dev": "npx serve . -p 3000",
+    "deploy": "cd ../infra && ./deploy.sh --frontend-only"
+  },
+  "devDependencies": {
+    "serve": "^14.0.0"
+  }
+}

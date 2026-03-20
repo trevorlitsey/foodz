@@ -1,0 +1,18 @@
+{
+  "name": "foodz-api",
+  "version": "1.0.0",
+  "description": "foodz lambda API — plain-english food/exercise logging via OpenAI + Claude",
+  "type": "module",
+  "main": "index.mjs",
+  "scripts": {
+    "dev": "node server.js",
+    "deploy": "cd ../infra && ./deploy.sh --lambda-only"
+  },
+  "dependencies": {
+    "@aws-sdk/client-dynamodb": "^3.0.0",
+    "@aws-sdk/lib-dynamodb": "^3.0.0"
+  },
+  "engines": {
+    "node": ">=22"
+  }
+}
