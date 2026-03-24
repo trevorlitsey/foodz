@@ -1,0 +1,772 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>log 🍜 · foodz</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700;1,9..40,400&display=swap" rel="stylesheet" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --accent:      #FF6B6B;
+      --accent-light: #FFE5E5;
+      --accent-dark: #E55555;
+      --bg:          #F8F7F5;
+      --surface:     #FFFFFF;
+      --surface-2:   #F2F1EF;
+      --text:        #1A1A1A;
+      --text-2:      #666666;
+      --text-3:      #999999;
+      --border:      #EBEBEB;
+      --shadow:      0 2px 12px rgba(0,0,0,0.06);
+      --shadow-hover: 0 4px 20px rgba(0,0,0,0.10);
+      --green:       #51CF66;
+      --orange:      #FF9F43;
+      --amber:       #f59e0b;
+      --font:        'DM Sans', system-ui, sans-serif;
+      --radius:      16px;
+      --radius-sm:   10px;
+    }
+
+    html { font-size: 16px; -webkit-font-smoothing: antialiased; }
+
+    body {
+      font-family: var(--font);
+      background: var(--bg);
+      color: var(--text);
+      height: 100dvh;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+
+    /* ── Header ── */
+    .log-header {
+      height: 56px;
+      min-height: 56px;
+      background: var(--surface);
+      border-bottom: 1px solid var(--border);
+      box-shadow: 0 1px 8px rgba(0,0,0,0.06);
+      display: flex;
+      align-items: center;
+      padding: 0 16px;
+      gap: 12px;
+      z-index: 10;
+    }
+
+    .back-btn {
+      background: var(--surface-2);
+      border: none;
+      border-radius: 8px;
+      width: 36px;
+      height: 36px;
+      font-size: 1rem;
+      cursor: pointer;
+      color: var(--text);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      text-decoration: none;
+      flex-shrink: 0;
+      transition: background 0.15s, color 0.15s;
+    }
+    .back-btn:hover {
+      background: var(--accent-light);
+      color: var(--accent);
+    }
+
+    .header-title {
+      flex: 1;
+      text-align: center;
+      font-size: 1rem;
+      font-weight: 700;
+      letter-spacing: -0.01em;
+      color: var(--text);
+    }
+
+    .stats-pill {
+      background: var(--surface-2);
+      border-radius: 99px;
+      padding: 5px 12px;
+      font-size: 0.75rem;
+      font-weight: 600;
+      color: var(--text-3);
+      white-space: nowrap;
+      flex-shrink: 0;
+      min-width: 60px;
+      text-align: center;
+      transition: all 0.3s ease;
+    }
+    .stats-pill.loaded { color: var(--text-2); }
+
+    /* ── Chat thread ── */
+    .chat-thread {
+      flex: 1;
+      overflow-y: auto;
+      padding: 20px 16px;
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+      background: var(--bg);
+    }
+
+    .chat-inner {
+      max-width: 720px;
+      width: 100%;
+      margin: 0 auto;
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+
+    /* ── Context card ── */
+    .context-card {
+      background: var(--surface);
+      border-radius: var(--radius);
+      padding: 16px 18px;
+      font-size: 0.82rem;
+      color: var(--text-2);
+      box-shadow: var(--shadow);
+    }
+
+    .context-card-date {
+      font-size: 0.7rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      color: var(--text-3);
+      margin-bottom: 6px;
+    }
+
+    .context-card-stats {
+      font-weight: 600;
+      color: var(--text);
+      margin-bottom: 8px;
+      font-size: 0.88rem;
+    }
+
+    .context-meals {
+      display: flex;
+      flex-direction: column;
+      gap: 3px;
+    }
+
+    .context-meal-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: baseline;
+      gap: 8px;
+    }
+
+    .context-meal-name {
+      color: var(--text-2);
+      text-transform: capitalize;
+    }
+
+    .context-meal-cal {
+      color: var(--text-3);
+      font-size: 0.78rem;
+      flex-shrink: 0;
+    }
+
+    .context-loading {
+      color: var(--text-3);
+      font-style: italic;
+      font-size: 0.82rem;
+    }
+
+    /* ── Message bubbles ── */
+    .msg-row {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+
+    .msg-row.user {
+      align-items: flex-end;
+    }
+
+    .msg-row.assistant {
+      align-items: flex-start;
+    }
+
+    .bubble {
+      max-width: 80%;
+      padding: 10px 14px;
+      border-radius: 18px;
+      line-height: 1.5;
+      font-size: 0.92rem;
+      white-space: pre-wrap;
+      word-break: break-word;
+    }
+
+    .bubble.user {
+      background: var(--accent);
+      color: #ffffff;
+      border-bottom-right-radius: 4px;
+    }
+
+    .bubble.assistant {
+      background: transparent;
+      color: var(--text);
+      padding: 2px 0;
+      border-radius: 0;
+      max-width: 100%;
+    }
+
+    /* ── Mutations block ── */
+    .mutations-block {
+      border-left: 3px solid var(--amber);
+      padding: 8px 10px 8px 12px;
+      background: var(--surface-2);
+      border-radius: 0 6px 6px 0;
+      font-size: 0.8rem;
+      cursor: pointer;
+      user-select: none;
+    }
+
+    .mutations-toggle {
+      color: #92400e;
+      font-weight: 600;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 0.78rem;
+    }
+
+    .mutations-toggle-arrow {
+      font-size: 0.65rem;
+      transition: transform 0.15s;
+    }
+
+    .mutations-toggle-arrow.open {
+      transform: rotate(90deg);
+    }
+
+    .mutations-list {
+      display: none;
+      margin-top: 8px;
+      display: flex;
+      flex-direction: column;
+      gap: 3px;
+    }
+
+    .mutations-list.hidden {
+      display: none;
+    }
+
+    .mutation-item {
+      color: var(--text-2);
+      font-family: 'SF Mono', 'Fira Code', monospace;
+      font-size: 0.75rem;
+    }
+
+    /* ── Thinking indicator ── */
+    .thinking-row {
+      display: flex;
+      align-items: flex-start;
+    }
+
+    .thinking-dots {
+      display: flex;
+      gap: 5px;
+      align-items: center;
+      padding: 10px 4px;
+    }
+
+    .thinking-dots span {
+      width: 8px;
+      height: 8px;
+      background: var(--text-3);
+      border-radius: 50%;
+      animation: pulse 1.2s ease-in-out infinite;
+    }
+
+    .thinking-dots span:nth-child(2) { animation-delay: 0.2s; }
+    .thinking-dots span:nth-child(3) { animation-delay: 0.4s; }
+
+    @keyframes pulse {
+      0%, 80%, 100% { opacity: 0.3; transform: scale(0.8); }
+      40% { opacity: 1; transform: scale(1); }
+    }
+
+    /* ── Input bar ── */
+    .input-bar {
+      background: var(--surface);
+      border-top: 1px solid var(--border);
+      box-shadow: 0 -1px 8px rgba(0,0,0,0.04);
+      padding: 12px 16px;
+      display: flex;
+      align-items: flex-end;
+      gap: 10px;
+    }
+
+    .input-bar-inner {
+      max-width: 720px;
+      width: 100%;
+      margin: 0 auto;
+      display: flex;
+      align-items: flex-end;
+      gap: 10px;
+    }
+
+    .chat-textarea {
+      flex: 1;
+      background: var(--surface-2);
+      border: 1px solid var(--border);
+      border-radius: 22px;
+      padding: 10px 16px;
+      font-family: var(--font);
+      font-size: 0.92rem;
+      color: var(--text);
+      resize: none;
+      outline: none;
+      line-height: 1.45;
+      max-height: 140px;
+      overflow-y: auto;
+      transition: border-color 0.2s, background 0.2s;
+    }
+
+    .chat-textarea:focus {
+      border-color: var(--accent);
+      background: var(--surface);
+    }
+
+    .chat-textarea::placeholder {
+      color: var(--text-3);
+    }
+
+    .send-btn {
+      width: 40px;
+      height: 40px;
+      min-width: 40px;
+      background: var(--accent);
+      border: none;
+      border-radius: 50%;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: background 0.15s, opacity 0.15s, transform 0.1s;
+      flex-shrink: 0;
+    }
+
+    .send-btn:disabled {
+      opacity: 0.35;
+      cursor: not-allowed;
+    }
+
+    .send-btn:not(:disabled):hover {
+      background: var(--accent-dark);
+      transform: scale(1.05);
+    }
+
+    .send-btn:not(:disabled):active {
+      transform: scale(0.95);
+    }
+
+    .send-btn svg {
+      width: 18px;
+      height: 18px;
+    }
+
+    /* ── Error bubble ── */
+    .msg-error-group {
+      display: flex;
+      justify-content: center;
+    }
+
+    .msg-error {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      background: #FFF5F5;
+      border: 1px solid #FFD6D6;
+      border-radius: 12px;
+      padding: 8px 14px;
+      max-width: 90%;
+    }
+
+    .error-text {
+      font-size: 0.82rem;
+      color: #c0392b;
+      flex: 1;
+    }
+
+    .retry-btn {
+      background: var(--accent);
+      color: #fff;
+      border: none;
+      border-radius: 8px;
+      padding: 5px 12px;
+      font-size: 0.78rem;
+      font-family: var(--font);
+      font-weight: 600;
+      cursor: pointer;
+      white-space: nowrap;
+      transition: background 0.15s, transform 0.1s;
+      flex-shrink: 0;
+    }
+
+    .retry-btn:hover { background: var(--accent-dark); }
+    .retry-btn:active { transform: scale(0.95); }
+
+    /* ── Scrollbar ── */
+    .chat-thread::-webkit-scrollbar { width: 4px; }
+    .chat-thread::-webkit-scrollbar-track { background: transparent; }
+    .chat-thread::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
+  </style>
+</head>
+<body>
+
+<header class="log-header">
+  <a id="back-btn" class="back-btn" href="/" aria-label="Back">←</a>
+  <div class="header-title">log 🍜</div>
+  <div class="stats-pill" id="stats-pill">—</div>
+</header>
+
+<div class="chat-thread" id="chat-thread">
+  <div class="chat-inner" id="chat-inner">
+    <div class="context-card" id="context-card">
+      <div class="context-loading">loading today's data…</div>
+    </div>
+  </div>
+</div>
+
+<div class="input-bar">
+  <div class="input-bar-inner">
+    <textarea
+      id="chat-input"
+      class="chat-textarea"
+      placeholder="log food, exercise, or ask anything…"
+      rows="1"
+    ></textarea>
+    <button class="send-btn" id="send-btn" disabled aria-label="Send">
+      <svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+        <line x1="12" y1="19" x2="12" y2="5"/>
+        <polyline points="5 12 12 5 19 12"/>
+      </svg>
+    </button>
+  </div>
+</div>
+
+<script>
+const API_URL = 'https://api.foodz.trevor.fail';
+
+// ── Date from URL ──
+function todayStr() {
+  const d = new Date();
+  return [
+    d.getFullYear(),
+    String(d.getMonth() + 1).padStart(2, '0'),
+    String(d.getDate()).padStart(2, '0'),
+  ].join('-');
+}
+
+const params = new URLSearchParams(location.search);
+const DATE = (params.get('date') && /^\d{4}-\d{2}-\d{2}$/.test(params.get('date')))
+  ? params.get('date')
+  : todayStr();
+
+// Update back button href
+document.getElementById('back-btn').href = `/?date=${DATE}`;
+
+// ── State ──
+let messages = []; // {role, content}
+let dayData = null;
+let lastFailedMessage = '';
+const DAY_CACHE_KEY = `foodz-day-${DATE}`;
+
+// ── Helpers ──
+function formatDateLabel(dateStr) {
+  const [y, m, d] = dateStr.split('-').map(Number);
+  const dt = new Date(y, m - 1, d);
+  const today = new Date(); today.setHours(0,0,0,0);
+  const diff = Math.round((today - dt) / 86400000);
+  if (diff === 0) return 'today';
+  if (diff === 1) return 'yesterday';
+  return dt.toLocaleDateString('en-US', { weekday: 'long', month: 'short', day: 'numeric' });
+}
+
+function statsPillText(totals, goalCal) {
+  if (!totals) return '—';
+  const cal = totals.calories_in || 0;
+  const prot = totals.protein || 0;
+  return `${cal.toLocaleString()} / ${(goalCal || 0).toLocaleString()} cal · P${prot}g`;
+}
+
+function renderContextCard(data) {
+  const card = document.getElementById('context-card');
+  if (!data) {
+    card.innerHTML = `<div class="context-loading">no data for ${DATE} — start logging!</div>`;
+    return;
+  }
+
+  const { totals, goal_calories, entries, exercise } = data;
+  const burned = totals.calories_burned || 0;
+  const prot = totals.protein || 0;
+
+  let mealsHtml = '';
+  if (entries && entries.length > 0) {
+    mealsHtml = entries.map(e => `
+      <div class="context-meal-row">
+        <span class="context-meal-name">${e.meal}</span>
+        <span class="context-meal-cal">${e.calories} cal</span>
+      </div>
+    `).join('');
+  }
+  if (exercise && exercise.length > 0) {
+    mealsHtml += exercise.map(ex => `
+      <div class="context-meal-row">
+        <span class="context-meal-name">💪 ${ex.activity}</span>
+        <span class="context-meal-cal">-${ex.calories_burned} cal</span>
+      </div>
+    `).join('');
+  }
+  if (!mealsHtml) {
+    mealsHtml = `<div style="color:var(--text-3);font-style:italic;font-size:0.8rem">nothing logged yet</div>`;
+  }
+
+  card.innerHTML = `
+    <div class="context-card-date">${formatDateLabel(DATE)} · ${DATE}</div>
+    <div class="context-card-stats">
+      ${(totals.calories_in || 0).toLocaleString()} cal
+      / ${(goal_calories || 0).toLocaleString()} goal
+      · ${burned} burned
+      · P${prot}g
+    </div>
+    <div class="context-meals">${mealsHtml}</div>
+  `;
+}
+
+function updateStatsPill(totals, goalCal) {
+  const pill = document.getElementById('stats-pill');
+  pill.textContent = statsPillText(totals, goalCal);
+  pill.classList.add('loaded');
+}
+
+// ── Chat rendering ──
+function appendMessage(role, content, mutations) {
+  const inner = document.getElementById('chat-inner');
+
+  const row = document.createElement('div');
+  row.className = `msg-row ${role}`;
+
+  const bubble = document.createElement('div');
+  bubble.className = `bubble ${role}`;
+  bubble.textContent = content;
+  row.appendChild(bubble);
+
+  if (mutations && mutations.length > 0) {
+    const block = document.createElement('div');
+    block.className = 'mutations-block';
+
+    const toggle = document.createElement('div');
+    toggle.className = 'mutations-toggle';
+    toggle.innerHTML = `<span class="mutations-toggle-arrow" id="arrow-${Date.now()}">▶</span> ${mutations.length} change${mutations.length !== 1 ? 's' : ''} logged`;
+
+    const list = document.createElement('div');
+    list.className = 'mutations-list hidden';
+    mutations.forEach(m => {
+      const item = document.createElement('div');
+      item.className = 'mutation-item';
+      item.textContent = `→ ${m}`;
+      list.appendChild(item);
+    });
+
+    toggle.addEventListener('click', () => {
+      const hidden = list.classList.toggle('hidden');
+      toggle.querySelector('.mutations-toggle-arrow').classList.toggle('open', !hidden);
+    });
+
+    block.appendChild(toggle);
+    block.appendChild(list);
+    row.appendChild(block);
+  }
+
+  inner.appendChild(row);
+  scrollToBottom();
+  return row;
+}
+
+function showThinking() {
+  const inner = document.getElementById('chat-inner');
+  const row = document.createElement('div');
+  row.className = 'thinking-row';
+  row.id = 'thinking-indicator';
+  row.innerHTML = `<div class="thinking-dots"><span></span><span></span><span></span></div>`;
+  inner.appendChild(row);
+  scrollToBottom();
+}
+
+function hideThinking() {
+  const el = document.getElementById('thinking-indicator');
+  if (el) el.remove();
+}
+
+function scrollToBottom() {
+  const thread = document.getElementById('chat-thread');
+  thread.scrollTop = thread.scrollHeight;
+}
+
+// ── Load initial day data ──
+async function loadDay() {
+  // Show cached day data instantly while fetching fresh
+  const cached = localStorage.getItem(DAY_CACHE_KEY);
+  if (cached) {
+    try {
+      const cachedData = JSON.parse(cached);
+      dayData = cachedData;
+      renderContextCard(cachedData);
+      updateStatsPill(cachedData.totals, cachedData.goal_calories);
+    } catch {}
+  }
+
+  // Fetch fresh from API (source of truth)
+  try {
+    const res = await fetch(`${API_URL}/day/${DATE}`);
+    if (!res.ok) {
+      if (!cached) renderContextCard(null);
+      return;
+    }
+    const freshData = await res.json();
+    dayData = freshData;
+    renderContextCard(freshData);
+    updateStatsPill(freshData.totals, freshData.goal_calories);
+    // Cache for instant display next load
+    localStorage.setItem(DAY_CACHE_KEY, JSON.stringify(freshData));
+    // Restore chat history from API (works across tabs/devices)
+    if (freshData.chatHistory && freshData.chatHistory.length > 0 && messages.length === 0) {
+      messages = freshData.chatHistory.map(m => ({ role: m.role, content: m.content }));
+      freshData.chatHistory.forEach(m => appendMessage(m.role, m.content));
+      scrollToBottom();
+    }
+  } catch {
+    if (!cached) renderContextCard(null);
+  }
+}
+
+// ── Error bubble ──
+function showErrorBubble(msg) {
+  const inner = document.getElementById('chat-inner');
+  const group = document.createElement('div');
+  group.className = 'msg-error-group';
+  group.innerHTML = `
+    <div class="msg-error">
+      <span class="error-text">${msg}</span>
+      <button class="retry-btn" onclick="retrySend()">↩ retry</button>
+    </div>
+  `;
+  inner.appendChild(group);
+  scrollToBottom();
+}
+
+// ── Core API call (shared by sendMessage and retrySend) ──
+async function callChatAPI() {
+  const btn = document.getElementById('send-btn');
+  btn.disabled = true;
+  showThinking();
+
+  try {
+    const res = await fetch(`${API_URL}/chat`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ messages, date: DATE }),
+    });
+
+    if (!res.ok) throw new Error(`API error ${res.status}`);
+
+    const data = await res.json();
+    hideThinking();
+
+    const reply = data.message || '';
+    messages.push({ role: 'assistant', content: reply });
+    appendMessage('assistant', reply, data.mutations && data.mutations.length > 0 ? data.mutations : null);
+
+    // Update stats if mutations happened
+    if (data.mutations && data.mutations.length > 0 && data.totals) {
+      updateStatsPill(data.totals, data.goal_calories);
+      try {
+        const dayRes = await fetch(`${API_URL}/day/${DATE}`);
+        if (dayRes.ok) {
+          dayData = await dayRes.json();
+          renderContextCard(dayData);
+          localStorage.setItem(DAY_CACHE_KEY, JSON.stringify(dayData));
+        }
+      } catch {}
+    }
+  } catch (err) {
+    hideThinking();
+    const isOverloaded = err.message.includes('529') || err.message.toLowerCase().includes('overload');
+    const friendlyMsg = isOverloaded
+      ? '⚠ anthropic is overloaded — tap retry to try again'
+      : '⚠ request failed — tap retry';
+    showErrorBubble(friendlyMsg);
+  }
+
+  btn.disabled = false;
+  document.getElementById('chat-input').focus();
+}
+
+// ── Send message ──
+async function sendMessage() {
+  const input = document.getElementById('chat-input');
+  const btn = document.getElementById('send-btn');
+  const text = input.value.trim();
+  if (!text || btn.disabled) return;
+
+  input.value = '';
+  input.style.height = 'auto';
+
+  lastFailedMessage = text;
+  messages.push({ role: 'user', content: text });
+  appendMessage('user', text);
+
+  await callChatAPI();
+}
+
+// ── Retry last failed message ──
+function retrySend() {
+  // Remove error bubble
+  const errEl = document.querySelector('.msg-error-group');
+  if (errEl) errEl.remove();
+
+  // Remove any partial assistant message that may have been added
+  if (messages.length > 0 && messages[messages.length - 1].role === 'assistant') {
+    messages.pop();
+    const inner = document.getElementById('chat-inner');
+    const rows = inner.querySelectorAll('.msg-row.assistant');
+    if (rows.length > 0) rows[rows.length - 1].remove();
+  }
+
+  callChatAPI();
+}
+
+// ── Input auto-resize ──
+const chatInput = document.getElementById('chat-input');
+const sendBtn = document.getElementById('send-btn');
+
+chatInput.addEventListener('input', () => {
+  chatInput.style.height = 'auto';
+  chatInput.style.height = Math.min(chatInput.scrollHeight, 140) + 'px';
+  sendBtn.disabled = chatInput.value.trim() === '';
+});
+
+chatInput.addEventListener('keydown', (e) => {
+  if (e.key === 'Enter' && !e.shiftKey) {
+    e.preventDefault();
+    sendMessage();
+  }
+});
+
+sendBtn.addEventListener('click', sendMessage);
+
+// ── Init ──
+loadDay();
+chatInput.focus();
+</script>
+</body>
+</html>

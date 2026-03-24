@@ -1,0 +1,45 @@
+name: Deploy API (Lambda)
+
+on:
+  push:
+    branches: [master]
+    paths:
+      - 'api/**'
+      - '.github/workflows/deploy-api.yml'
+  workflow_dispatch:
+
+jobs:
+  deploy:
+    name: Deploy Lambda
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: us-east-1
+
+      - name: Zip and deploy Lambda
+        run: |
+          cp api/index.mjs /tmp/index.mjs
+          cd /tmp && zip foodz-lambda.zip index.mjs
+          aws lambda update-function-code \
+            --function-name foodz-api \
+            --zip-file fileb:///tmp/foodz-lambda.zip \
+            --query 'LastUpdateStatus' --output text
+
+      - name: Wait for update to complete
+        run: |
+          aws lambda wait function-updated --function-name foodz-api
+          echo "✓ lambda updated"
+
+      - name: Update environment variables
+        run: |
+          aws lambda update-function-configuration \
+            --function-name foodz-api \
+            --environment "Variables={OPENAI_API_KEY=${{ secrets.OPENAI_API_KEY }},ANTHROPIC_API_KEY=${{ secrets.ANTHROPIC_API_KEY }}}" \
+            --query 'LastUpdateStatus' --output text

@@ -515,7 +515,7 @@ function initLogInput() {
   const closeBtn = document.getElementById('btn-log-close');
   const backdrop = document.getElementById('log-modal-backdrop');
 
-  openBtn.addEventListener('click', openLogModal);
+  // btn-log-open is now a link; no click handler needed
   closeBtn.addEventListener('click', closeLogModal);
   backdrop.addEventListener('click', closeLogModal);
 
@@ -597,6 +597,7 @@ async function submitLog() {
 function goTo(dateStr) {
   currentDateIndex = allDates.indexOf(dateStr);
   history.pushState({ date: dateStr }, '', `?date=${dateStr}`);
+  document.getElementById('btn-log-open').href = `log.html?date=${dateStr}`;
   renderDay(dateStr);
 }
 
@@ -604,7 +605,9 @@ window.addEventListener('popstate', (e) => {
   const date = (e.state && e.state.date) || todayStr();
   currentDateIndex = allDates.indexOf(date);
   if (currentDateIndex < 0 && allDates.length > 0) currentDateIndex = allDates.length - 1;
-  renderDay(allDates[currentDateIndex] || date);
+  const activeDate = allDates[currentDateIndex] || date;
+  document.getElementById('btn-log-open').href = `log.html?date=${activeDate}`;
+  renderDay(activeDate);
 });
 
 document.getElementById('btn-prev').addEventListener('click', () => {
@@ -660,6 +663,7 @@ async function init() {
     currentDateIndex = allDates.indexOf(startDate);
     // Seed the initial history state so popstate works on browser back
     history.replaceState({ date: startDate }, '', `?date=${startDate}`);
+    document.getElementById('btn-log-open').href = `log.html?date=${startDate}`;
     await renderDay(startDate);
   } catch (err) {
     console.error('Failed to load data:', err);
