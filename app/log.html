@@ -478,6 +478,7 @@ document.getElementById('back-btn').href = `/?date=${DATE}`;
 let messages = []; // {role, content}
 let dayData = null;
 let lastFailedMessage = '';
+const DAY_CACHE_KEY = `foodz-day-${DATE}`;
 
 // ── Helpers ──
 function formatDateLabel(dateStr) {
@@ -613,17 +614,38 @@ function scrollToBottom() {
 
 // ── Load initial day data ──
 async function loadDay() {
+  // Show cached day data instantly while fetching fresh
+  const cached = localStorage.getItem(DAY_CACHE_KEY);
+  if (cached) {
+    try {
+      const cachedData = JSON.parse(cached);
+      dayData = cachedData;
+      renderContextCard(cachedData);
+      updateStatsPill(cachedData.totals, cachedData.goal_calories);
+    } catch {}
+  }
+
+  // Fetch fresh from API (source of truth)
   try {
     const res = await fetch(`${API_URL}/day/${DATE}`);
     if (!res.ok) {
-      renderContextCard(null);
+      if (!cached) renderContextCard(null);
       return;
     }
-    dayData = await res.json();
-    renderContextCard(dayData);
-    updateStatsPill(dayData.totals, dayData.goal_calories);
+    const freshData = await res.json();
+    dayData = freshData;
+    renderContextCard(freshData);
+    updateStatsPill(freshData.totals, freshData.goal_calories);
+    // Cache for instant display next load
+    localStorage.setItem(DAY_CACHE_KEY, JSON.stringify(freshData));
+    // Restore chat history from API (works across tabs/devices)
+    if (freshData.chatHistory && freshData.chatHistory.length > 0 && messages.length === 0) {
+      messages = freshData.chatHistory.map(m => ({ role: m.role, content: m.content }));
+      freshData.chatHistory.forEach(m => appendMessage(m.role, m.content));
+      scrollToBottom();
+    }
   } catch {
-    renderContextCard(null);
+    if (!cached) renderContextCard(null);
   }
 }
 
@@ -672,6 +694,7 @@ async function callChatAPI() {
         if (dayRes.ok) {
           dayData = await dayRes.json();
           renderContextCard(dayData);
+          localStorage.setItem(DAY_CACHE_KEY, JSON.stringify(dayData));
         }
       } catch {}
     }
