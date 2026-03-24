@@ -373,6 +373,47 @@
       height: 18px;
     }
 
+    /* ── Error bubble ── */
+    .msg-error-group {
+      display: flex;
+      justify-content: center;
+    }
+
+    .msg-error {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      background: #FFF5F5;
+      border: 1px solid #FFD6D6;
+      border-radius: 12px;
+      padding: 8px 14px;
+      max-width: 90%;
+    }
+
+    .error-text {
+      font-size: 0.82rem;
+      color: #c0392b;
+      flex: 1;
+    }
+
+    .retry-btn {
+      background: var(--accent);
+      color: #fff;
+      border: none;
+      border-radius: 8px;
+      padding: 5px 12px;
+      font-size: 0.78rem;
+      font-family: var(--font);
+      font-weight: 600;
+      cursor: pointer;
+      white-space: nowrap;
+      transition: background 0.15s, transform 0.1s;
+      flex-shrink: 0;
+    }
+
+    .retry-btn:hover { background: var(--accent-dark); }
+    .retry-btn:active { transform: scale(0.95); }
+
     /* ── Scrollbar ── */
     .chat-thread::-webkit-scrollbar { width: 4px; }
     .chat-thread::-webkit-scrollbar-track { background: transparent; }
@@ -436,6 +477,7 @@ document.getElementById('back-btn').href = `/?date=${DATE}`;
 // ── State ──
 let messages = []; // {role, content}
 let dayData = null;
+let lastFailedMessage = '';
 
 // ── Helpers ──
 function formatDateLabel(dateStr) {
@@ -585,19 +627,25 @@ async function loadDay() {
   }
 }
 
-// ── Send message ──
-async function sendMessage() {
-  const input = document.getElementById('chat-input');
+// ── Error bubble ──
+function showErrorBubble(msg) {
+  const inner = document.getElementById('chat-inner');
+  const group = document.createElement('div');
+  group.className = 'msg-error-group';
+  group.innerHTML = `
+    <div class="msg-error">
+      <span class="error-text">${msg}</span>
+      <button class="retry-btn" onclick="retrySend()">↩ retry</button>
+    </div>
+  `;
+  inner.appendChild(group);
+  scrollToBottom();
+}
+
+// ── Core API call (shared by sendMessage and retrySend) ──
+async function callChatAPI() {
   const btn = document.getElementById('send-btn');
-  const text = input.value.trim();
-  if (!text || btn.disabled) return;
-
-  input.value = '';
-  input.style.height = 'auto';
   btn.disabled = true;
-
-  messages.push({ role: 'user', content: text });
-  appendMessage('user', text);
   showThinking();
 
   try {
@@ -619,25 +667,59 @@ async function sendMessage() {
     // Update stats if mutations happened
     if (data.mutations && data.mutations.length > 0 && data.totals) {
       updateStatsPill(data.totals, data.goal_calories);
-      // Refresh context card with new data
-      if (data.totals) {
-        // Re-fetch full day to update context card
-        try {
-          const dayRes = await fetch(`${API_URL}/day/${DATE}`);
-          if (dayRes.ok) {
-            dayData = await dayRes.json();
-            renderContextCard(dayData);
-          }
-        } catch {}
-      }
+      try {
+        const dayRes = await fetch(`${API_URL}/day/${DATE}`);
+        if (dayRes.ok) {
+          dayData = await dayRes.json();
+          renderContextCard(dayData);
+        }
+      } catch {}
     }
   } catch (err) {
     hideThinking();
-    appendMessage('assistant', `oops — ${err.message}`);
+    const isOverloaded = err.message.includes('529') || err.message.toLowerCase().includes('overload');
+    const friendlyMsg = isOverloaded
+      ? '⚠ anthropic is overloaded — tap retry to try again'
+      : '⚠ request failed — tap retry';
+    showErrorBubble(friendlyMsg);
   }
 
   btn.disabled = false;
-  input.focus();
+  document.getElementById('chat-input').focus();
+}
+
+// ── Send message ──
+async function sendMessage() {
+  const input = document.getElementById('chat-input');
+  const btn = document.getElementById('send-btn');
+  const text = input.value.trim();
+  if (!text || btn.disabled) return;
+
+  input.value = '';
+  input.style.height = 'auto';
+
+  lastFailedMessage = text;
+  messages.push({ role: 'user', content: text });
+  appendMessage('user', text);
+
+  await callChatAPI();
+}
+
+// ── Retry last failed message ──
+function retrySend() {
+  // Remove error bubble
+  const errEl = document.querySelector('.msg-error-group');
+  if (errEl) errEl.remove();
+
+  // Remove any partial assistant message that may have been added
+  if (messages.length > 0 && messages[messages.length - 1].role === 'assistant') {
+    messages.pop();
+    const inner = document.getElementById('chat-inner');
+    const rows = inner.querySelectorAll('.msg-row.assistant');
+    if (rows.length > 0) rows[rows.length - 1].remove();
+  }
+
+  callChatAPI();
 }
 
 // ── Input auto-resize ──
